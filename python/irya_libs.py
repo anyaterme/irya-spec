@@ -144,7 +144,10 @@ class Spectrum():
         f = open (path,"rb")
         data_raw = f.read()
         f.close()
-        (self.timestamp, self.integration, self.bw, self.channels) = struct.unpack(">fdfi", data_raw[:16])
+        try:
+            (self.timestamp, self.integration, self.bw, self.channels) = struct.unpack(">fdfi", data_raw[:16])
+        except:
+            (self.timestamp, self.integration, self.bw, self.channels) = struct.unpack(">fffi", data_raw[:16])
         self.data = np.asarray(struct.unpack(">%dl" % self.channels, data_raw[16:]))
         self.bandwidth = np.linspace(0,self.bw,self.channels)
 

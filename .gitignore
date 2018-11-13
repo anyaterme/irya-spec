@@ -1,3 +1,4 @@
 *.log
 *.htm
+*.pyc
 adc16_gopal/
