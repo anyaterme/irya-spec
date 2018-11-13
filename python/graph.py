@@ -2,7 +2,7 @@ import glob
 from irya_libs import *
 import matplotlib.pyplot as plt
 
-files=glob.glob('./datas/1420mhz/*.dat')
+files=glob.glob('../irya/datas/1420mhz/*.dat')
 files.sort()
 spec_total=Spectrum(files[0])
 spec_total.data *= 0

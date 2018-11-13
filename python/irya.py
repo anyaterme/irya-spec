@@ -53,7 +53,7 @@ def save_to_file(data,timestamp,integration_time,numchannels, bandwidth):
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datas')
     path = os.path.join(path, fname)
     f = open(path, "wb")
-    f.write(struct.pack(">fffi%dl" % numchannels, timestamp, integration_time, bandwidth, int(numchannels),*data))
+    f.write(struct.pack(">fdfi%dl" % numchannels, timestamp, integration_time, bandwidth, int(numchannels),*data))
     f.close()
 
 def read_bw():
