@@ -11,7 +11,7 @@ You need to have KATCP and CORR installed. Get them from http://pypi.python.org/
 #TODO: add support for determining ADC input level 
 
 import corr,time,numpy,struct,sys,logging,pylab,matplotlib, time
-from irya_roach import IryaRoach
+from irya_libs import IryaRoach
 import numpy as np
 import os
 
@@ -53,7 +53,7 @@ def save_to_file(data,timestamp,integration_time,numchannels, bandwidth):
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datas')
     path = os.path.join(path, fname)
     f = open(path, "wb")
-    f.write(struct.pack(">fdfi%dl" % numchannels, timestamp, integration_time, bandwidth, int(numchannels),*data))
+    f.write(struct.pack(">dddi%dl" % numchannels, timestamp, integration_time, bandwidth, int(numchannels),*data))
     f.close()
 
 def read_bw():
@@ -69,7 +69,7 @@ def read_bw():
     return(bw)
 
 def plot_spectrum():
-    global channel_max, last_acc, last_time,  bw, clk, integration_time, channels, specs
+    global channel_max, last_acc, last_time,  bw, clk, integration_time, channels, specs, savefile
     acc_n, interleave_a = get_data(channels)
     interleave_a = np.asarray(interleave_a)
     interleave_a[0:5] = 0
@@ -95,7 +95,8 @@ def plot_spectrum():
             #print (channel_max)
         if (acc_n > 0):
             #bw = read_bw()
-            save_to_file(interleave_a, t, integration_time, channels, bw)
+            if (savefile):
+                save_to_file(interleave_a, t, t-last_time, channels, bw)
             msg = "Accumulation time = %.4lf seconds." % (t - last_time)
             last_time = t
             msg = "%s Detection in channel %d.\r" % (msg,channel_max)
@@ -116,16 +117,18 @@ if __name__ == '__main__':
     p = OptionParser()
     p.set_usage('spectrometer.py <ROACH_HOSTNAME_or_IP> [options]')
     p.set_description(__doc__)
-    p.add_option('-t', '--time', dest='time', type='int',default=2, help='Set the time to accumulations')
+    p.add_option('-t', '--time', dest='time', type='float',default=2, help='Set the time to accumulations')
     p.add_option('-o', '--obstime', dest='obstime', type='int',default=300, help='Set the observation duration')
     p.add_option('-c', '--channels', dest='channels', type='int',default=2**14, help='Set the number channels.')
-    p.add_option('-N', '--specs', dest='specs', type='int',default=1, help='Set the number of spectrums to read.')
+    p.add_option('-N', '--specs', dest='specs', type='int',default=0, help='Set the number of spectrums to read.')
     p.add_option('--bw', dest='bandwidth', type='float',default=250., help='Set the bandwidth [MHz] between 12.5-700.')
     p.add_option('-g', '--gain', dest='gain', type='int',default=0xffffffff, help='Set the digital gain (6bit quantisation scalar). Default is 0xffffffff (max), good for wideband noise. Set lower for CW tones.')
     p.add_option('-s', '--skip', dest='skip', action='store_true', help='Skip reprogramming the FPGA and configuring EQ.')
     p.add_option('-b', '--bof', dest='boffile',type='str', default='spec16_2018_Oct_10_0905.bof', help='Specify the bof file to load')
+    p.add_option('--no-save', dest='nosave', action='store_true', help='Not save data files.', default=False)
     opts, args = p.parse_args(sys.argv[1:])
 
+    savefile = not (opts.nosave)
     if args==[]:
         print 'Please specify a ROACH board. Run with the -h flag to see all options.\nExiting.'
         exit()
@@ -194,6 +197,9 @@ try:
         print 'done'
     else:   
         print 'Skipped.'
+
+    if not savefile:
+        print "Not save file"
 
     last_time = time.time()
     last_acc = None 

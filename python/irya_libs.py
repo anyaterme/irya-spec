@@ -140,15 +140,23 @@ except Exception as e:
 
 
 class Spectrum():
-    def __init__ (self, path):
-        f = open (path,"rb")
-        data_raw = f.read()
-        f.close()
-        try:
-            (self.timestamp, self.integration, self.bw, self.channels) = struct.unpack(">fdfi", data_raw[:16])
-        except:
-            (self.timestamp, self.integration, self.bw, self.channels) = struct.unpack(">fffi", data_raw[:16])
-        self.data = np.asarray(struct.unpack(">%dl" % self.channels, data_raw[16:]))
+    def __init__ (self, path=None, bw=1., channels=1, integ=1.):
+        if path is not None:
+            f = open (path,"rb")
+            data_raw = f.read()
+            f.close()
+            try:
+                (self.timestamp, self.integration, self.bw, self.channels) = struct.unpack(">dddi", data_raw[:28])
+                self.data = np.asarray(struct.unpack(">%dl" % self.channels, data_raw[28:]))
+            except:
+                (self.timestamp, self.integration, self.bw, self.channels) = struct.unpack(">fffi", data_raw[:28])
+                self.data = np.asarray(struct.unpack(">%dl" % self.channels, data_raw[16:]))
+        else:
+            self.bw = bw
+            self.integration = integ
+            self.channels=channels
+            self.data = np.random.random(channels)
+
         self.bandwidth = np.linspace(0,self.bw,self.channels)
 
     def show(self, zoom=None, units=u.MHz):
@@ -228,7 +236,7 @@ class Spectrum():
         nonoise[np.where(nonoise<0)]=0
         return nonoise
 
-    def get_armonic(self, freq):
+    def get_harmonic(self, freq):
         if not hasattr(freq, 'unit'):
             freq = freq * u.MHz
         bw = (self.bw*u.MHz).to(freq.unit)
