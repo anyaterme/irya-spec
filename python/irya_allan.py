@@ -47,7 +47,8 @@ def get_data(channels=2048):
         interleave_a.append(a_1[i])
     return acc_n, interleave_a 
 
-def save_to_file(data,timestamp,integration_time,numchannels, bandwidth):
+def save_to_file(data,timestamp,integration_time,numchannels, bandwidth, last_acc=0):
+    print ("Saving spectrum %05d..." % last_acc)
     fname = "%s%06d.dat" % (time.strftime('%Y%m%d%H%M%S', time.localtime(timestamp)), int((timestamp*1e6)%1e6))
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'datas')
     path = os.path.join(path, fname)
@@ -78,7 +79,7 @@ def get_spectrum():
         last_acc = acc_n
         if (acc_n > 0):
             if (savefile):
-                thread.star_new_thread(save_to_file, (interleave_a, t, t-last_time, channels, bw))
+                thread.start_new_thread(save_to_file, (interleave_a, t, t-last_time, channels, bw, last_acc))
             last_time = t
 
 
@@ -179,6 +180,8 @@ if __name__ == '__main__':
         last_acc = 0
         while last_acc < specs:
             get_spectrum()
+
+        time.sleep(10)
         print ("Adquisition finished...")
         exit_clean()
 
