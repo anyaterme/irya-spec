@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 '''
-This script demonstrates programming an FPGA, configuring a wideband spectrometer and plotting the received data using the Python KATCP library along with the katcp_wrapper distributed in the corr package. Designed for use with TUT3 at the 2009 CASPER workshop.\n
-
-You need to have KATCP and CORR installed. Get them from http://pypi.python.org/pypi/katcp and http://casper.berkeley.edu/svn/trunk/projects/packetized_correlator/corr-0.4.0/
-
-\nAuthor: Jason Manley, November 2009.
+\nAuthor: Daniel Diaz, January 2018
 '''
 
 #TODO: add support for ADC histogram plotting.
@@ -22,7 +18,7 @@ integration_time = 1
 katcp_port=7147
 
 def exit_fail():
-    print 'FAILURE DETECTED. Log entries:\n',lh.printMessages()
+    print 'FAILURE DETECTED. Log entries:\n'#,lh.printMessages()
     try:
         fpga.stop()
     except: pass
@@ -74,6 +70,7 @@ def plot_spectrum():
     interleave_a = np.asarray(interleave_a)
     interleave_a[0:5] = 0
     interleave_a[-5:] = 0
+    print (acc_n)
     if last_acc != acc_n:
         t = time.time()
         last_acc = acc_n
@@ -141,13 +138,16 @@ if __name__ == '__main__':
         bitstream = opts.boffile
 
 try:
-    from valon5009 import Valon5009 
-    clk = Valon5009('/dev/ttyUSB2')
-    if opts.bandwidth is not None:
-        print ("Setting bandwidth at %.2lf MHz..." % opts.bandwidth)
-        clk.set_freq(2,opts.bandwidth * 2.)
-    bw = clk.get_freq()[1]/2.
-    clk.close()
+    try:
+        from valon5009 import Valon5009 
+        clk = Valon5009('/dev/ttyUSB2')
+        if opts.bandwidth is not None:
+            print ("Setting bandwidth at %.2lf MHz..." % opts.bandwidth)
+            clk.set_freq(2,opts.bandwidth * 2.)
+        bw = clk.get_freq()[1]/2.
+        clk.close()
+    except:
+        bw = opts.bandwidth
     print ("Bandwidth set at %.2lf MHz..." % bw)
 
     loggers = []
@@ -180,7 +180,9 @@ try:
 
     integration_time = opts.time
     specs = opts.specs
-    acc_len = int (opts.time * ((2**(np.log2(bw*1e6))) / channels))
+    #acc_len = int (opts.time * ((2**(np.log2(bw*1e6))) / channels))
+    #acc_len = int(opts.time * 2**(int(np.ceil(np.log2(bw*1e6)))) / (channels * 2.))
+    acc_len = int(opts.time * bw * 1e6 / (channels))
     print "Setting accumulation time at %.2lf sec... " % opts.time
     print 'Configuring accumulation period to %d...' % acc_len,
     fpga.write_int('acc_len',acc_len)

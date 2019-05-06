@@ -111,6 +111,14 @@ class Valon5009(serial.Serial):
         print out[1]
         return float((out[1].split(';')[0].split(' ')[1]))
 
+    def save(self):
+        cmd = "sav" 
+        self.send_command(cmd)
+        out = self.readlines()
+        self.reset_output_buffer()
+        print out[1]
+
+
 
 
 if __name__ == '__main__':
