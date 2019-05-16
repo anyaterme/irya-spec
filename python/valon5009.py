@@ -73,16 +73,18 @@ class Valon5009(serial.Serial):
         print out[1]
         return float((out[1].split(';')[0].split(' ')[1]))
 
-    def get_pow(self, source=1):
-        if source not in [1,2]:
-            print("You must specify the source [1,2].")
-            return False
-        cmd = "s%d;plev?" % (source)
-        self.send_command(cmd)
-        out = self.readlines()
-        self.reset_output_buffer()
-        print out[1]
-        return float((out[1].split(';')[0].split(' ')[1]))
+    def get_pow(self, source=None):
+        if source is None:
+            return (self.get_pow(1), self.get_pow(2))
+        else:
+            if source not in [1,2]:
+                print("You must specify the source [1,2].")
+                return False
+            cmd = "s%d;plev?" % (source)
+            self.send_command(cmd)
+            out = self.readlines()
+            self.reset_output_buffer()
+            return float((out[1].split(';')[0].split(' ')[1]))
 
     def set_att(self, source=1, att=0):
         if source not in [1,2]:
@@ -100,16 +102,18 @@ class Valon5009(serial.Serial):
         print out[1]
         return float((out[1].split(';')[0].split(' ')[1]))
 
-    def get_att(self, source=1):
-        if source not in [1,2]:
-            print("You must specify the source [1,2].")
-            return False
-        cmd = "s%d;att?" % (source)
-        self.send_command(cmd)
-        out = self.readlines()
-        self.reset_output_buffer()
-        print out[1]
-        return float((out[1].split(';')[0].split(' ')[1]))
+    def get_att(self, source=None):
+        if source is None:
+            return(self.get_att(1), self.get_att(2))
+        else:
+            if source not in [1,2]:
+                print("You must specify the source [1,2].")
+                return False
+            cmd = "s%d;att?" % (source)
+            self.send_command(cmd)
+            out = self.readlines()
+            self.reset_output_buffer()
+            return float((out[1].split(';')[0].split(' ')[1]))
 
     def save(self):
         cmd = "sav" 

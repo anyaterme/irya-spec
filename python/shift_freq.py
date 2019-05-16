@@ -35,7 +35,7 @@ if __name__ == '__main__':
     t0 = time.time()
     while (time.time() - t0 < total_time):
         print ("[%lf] Setting freq %.6lf" % (time.time(), f0))
-        clk.set_freq(2, f0)
+        clk.set_freq(1, f0)
         t1 = time.time()
         while (time.time() - t1 < delta_time):
             pass

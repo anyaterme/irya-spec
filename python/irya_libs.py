@@ -157,6 +157,9 @@ class Spectrum():
             self.channels=channels
             self.data = np.random.random(channels)
 
+        self.data[np.where(self.data == 0)] = 1
+        self.data = 10 * np.log10(self.data)
+
         self.bandwidth = np.linspace(0,self.bw,self.channels)
 
     def show(self, zoom=None, units=u.MHz):
@@ -228,13 +231,18 @@ class Spectrum():
 
         return find_nearest_index(self.bandwidth * u.MHz, freq)
 
-
-
     def clean_noise(self, sigma=3):
         nonoise = np.copy(self.data)
         nonoise = nonoise - (np.mean(self.data) + sigma * np.std(self.data))
         nonoise[np.where(nonoise<0)]=0
         return nonoise
+
+    def get_snr(self):
+        detections = self.detections()
+        if(len (detections[0]) > 0):
+            return max(detections[2] * 1. / self.get_noise())
+        else:
+            return 0.
 
     def get_harmonic(self, freq):
         if not hasattr(freq, 'unit'):
@@ -245,6 +253,9 @@ class Spectrum():
         armonic = armonic * freq.unit
         idx = find_nearest_index(self.bandwidth*u.MHz, armonic)
         return idx,armonic,self.data[idx]
+
+    def get_noise(self):
+        return np.mean(self.data)
         
 class Spec():
     def __init__(self, roach_address, katcp_port=7147, bitstream=None, channels=2**13, acc_time=1, gain=0xffffffff, bw=200.):

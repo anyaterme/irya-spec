@@ -70,14 +70,14 @@ def plot_spectrum():
     interleave_a = np.asarray(interleave_a)
     interleave_a[0:5] = 0
     interleave_a[-5:] = 0
-    print (acc_n)
     if last_acc != acc_n:
         t = time.time()
         last_acc = acc_n
 
 
+        interleave_a[np.where(interleave_a == 0)] = 1
         matplotlib.pyplot.clf()
-        matplotlib.pylab.plot(np.linspace(0,bw,channels), interleave_a)
+        matplotlib.pylab.plot(np.linspace(0,bw,channels), 10*np.log10(interleave_a))
         #matplotlib.pylab.semilogy(np.linspace(0,bw,channels), interleave_a)
         matplotlib.pylab.title('Integration number %i.'%acc_n)
         matplotlib.pylab.ylabel('Power (arbitrary units)')
