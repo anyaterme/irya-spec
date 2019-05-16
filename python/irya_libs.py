@@ -157,8 +157,10 @@ class Spectrum():
             self.channels=channels
             self.data = np.random.random(channels)
 
-        self.data[np.where(self.data == 0)] = 1
-        self.data = 10 * np.log10(self.data)
+        self.data_db = self.data
+
+        self.data_db[np.where(self.data_db == 0)] = 1
+        self.data_db = 10 * np.log10(self.data_db)
 
         self.bandwidth = np.linspace(0,self.bw,self.channels)
 
@@ -187,27 +189,31 @@ class Spectrum():
         channels = np.where(self.data > np.mean(self.data) + sigma*np.std(self.data))
         return channels, self.bandwidth[channels],self.data[channels]
 
-    def show_detections(self, sigma=3, zoom=None, show_labels=True):
+    def show_detections(self, sigma=3, zoom=None, show_labels=True, db = False):
+        if db :
+            data = self.data_db
+        else:
+            data = self.data
         if zoom is None:
             spec_x = np.linspace(0, (self.bw*u.MHz), self.channels)
-            spec_y = self.data
+            spec_y = data
         else:
             if hasattr(zoom,'unit'):
                 spec_x = np.linspace(0, (self.bw*u.MHz).to(zoom.unit), self.channels)
                 idx0 = find_nearest_index(spec_x, zoom[0])
                 idx1 = find_nearest_index(spec_x, zoom[1])
                 spec_x = spec_x[idx0:idx1]
-                spec_y = self.data[idx0:idx1]
+                spec_y = data[idx0:idx1]
             else:
                 spec_x = np.linspace(0, (self.bw*u.MHz).to(units), self.channels)
                 spec_x = spec_x[zoom[0]:zoom[1]]
-                spec_y = self.data[zoom[0]:zoom[1]]
+                spec_y = data[zoom[0]:zoom[1]]
 
 
 
 
         plt.plot(spec_x, spec_y)
-        channels = np.where(spec_y > np.mean(self.data) + sigma*np.std(self.data))
+        channels = np.where(spec_y > np.mean(data) + sigma*np.std(data))
         freq = spec_x[channels]
         data = spec_y[channels]
         colors = list(Color('red').range_to(Color("Blue"),len(channels[0])))
@@ -219,7 +225,11 @@ class Spectrum():
             legend_labels.append("%d - %s" % (channels[0][i], "{0:0.03f}".format(freq[i])))
         if show_labels:
             plt.legend(list(plots), list(legend_labels))
-        plt.ylabel('Power (arbitrary units)')
+
+        if db:
+            plt.ylabel('Poser dB (arbitrary units)')
+        else:
+            plt.ylabel('Power (arbitrary units)')
         plt.xlabel('Freq (MHz)')
         #plt.title(str(datetime.datetime.fromtimestamp(self.timestamp)))
         #plt.show()
