@@ -65,7 +65,7 @@ def read_bw():
     return(bw)
 
 def plot_spectrum():
-    global channel_max, last_acc, last_time,  bw, clk, integration_time, channels, specs, savefile
+    global channel_max, last_acc, last_time,  bw, clk, integration_time, channels, specs, savefile, db_power
     acc_n, interleave_a = get_data(channels)
     interleave_a = np.asarray(interleave_a)
     interleave_a[0:5] = 0
@@ -76,22 +76,21 @@ def plot_spectrum():
 
 
         matplotlib.pyplot.clf()
-        matplotlib.pylab.plot(np.linspace(0,bw,channels), interleave_a)
-        #interleave_a[np.where(interleave_a == 0)] = 1
-        #matplotlib.pylab.semilogy(np.linspace(0,bw,channels), interleave_a)
+        if db_power:
+            matplotlib.pylab.ylabel('Power dB')
+            interleave_a[np.where(interleave_a == 0)] = 1
+            matplotlib.pylab.plot(np.linspace(0,bw,channels), 10*np.log10(interleave_a))
+        else:
+            matplotlib.pylab.ylabel('Power (arbitrary units)')
+            matplotlib.pylab.plot(np.linspace(0,bw,channels), interleave_a)
         matplotlib.pylab.title('Integration number %i.'%acc_n)
-        matplotlib.pylab.ylabel('Power (arbitrary units)')
         matplotlib.pylab.ylim(0)
         matplotlib.pylab.grid()
-        #matplotlib.pylab.xlabel('Channel')
-        #matplotlib.pylab.xlim(0,channels)
         matplotlib.pylab.xlabel('Freq (MHz)')
         fig.canvas.draw()
         if np.argmax(interleave_a) != channel_max:
             channel_max = np.argmax(interleave_a)
-            #print (channel_max)
         if (acc_n > 0):
-            #bw = read_bw()
             if (savefile):
                 save_to_file(interleave_a, t, t-last_time, channels, bw)
             msg = "Accumulation time = %.4lf seconds." % (t - last_time)
@@ -121,6 +120,7 @@ if __name__ == '__main__':
     p.add_option('--bw', dest='bandwidth', type='float',default=250., help='Set the bandwidth [MHz] between 12.5-700.')
     p.add_option('-g', '--gain', dest='gain', type='int',default=0xffffffff, help='Set the digital gain (6bit quantisation scalar). Default is 0xffffffff (max), good for wideband noise. Set lower for CW tones.')
     p.add_option('-s', '--skip', dest='skip', action='store_true', help='Skip reprogramming the FPGA and configuring EQ.')
+    p.add_option('--db', dest='db_power', action='store_true', help='Show Spectrum in DB.', default=False)
     p.add_option('-b', '--bof', dest='boffile',type='str', default='spec16_2018_Oct_10_0905.bof', help='Specify the bof file to load')
     p.add_option('--no-save', dest='nosave', action='store_true', help='Not save data files.', default=False)
     opts, args = p.parse_args(sys.argv[1:])
@@ -203,6 +203,7 @@ try:
     if not savefile:
         print "Not save file"
 
+    db_power = opts.db_power
     last_time = time.time()
     last_acc = None 
     #set up the figure with a subplot to be plotted

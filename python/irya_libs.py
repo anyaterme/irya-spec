@@ -222,12 +222,16 @@ class Spectrum():
         legend_labels = []
         for i in range(len(channels[0])):
             plots.append(plt.scatter(freq[i],data[i],color=colors[i].get_rgb(),marker=labels[i % len(labels)]))
-            legend_labels.append("%d - %s" % (channels[0][i], "{0:0.03f}".format(freq[i])))
+            if db :
+                label = "%d - %s - %s dB" % (channels[0][i], "{0:0.03f}".format(freq[i]), "{0:0.03f}".format(data[i]))
+            else:
+                label = "%d - %s" % (channels[0][i], "{0:0.03f}".format(freq[i]))
+            legend_labels.append(label)
         if show_labels:
             plt.legend(list(plots), list(legend_labels))
 
         if db:
-            plt.ylabel('Poser dB (arbitrary units)')
+            plt.ylabel('Power dB (arbitrary units)')
         else:
             plt.ylabel('Power (arbitrary units)')
         plt.xlabel('Freq (MHz)')
